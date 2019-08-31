@@ -1,0 +1,169 @@
+#!/usr/local/bin/bash
+
+function clk {
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        tput cuu 2
+        echo -en `date +'%a %B %e %Y'` > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en `date +'%H:%M:%S'` > /dev/cuau2
+        sleep 1
+}
+function gps {
+        echo -en '\xfe\x51' > /dev/cuau2
+        gpspipe -rP > /dev/cuau2 &
+	sleep 1
+}
+function pps {
+        echo -en '\xfe\x51' > /dev/cuau2
+        gpspipe -rP | egrep "^{" > /dev/cuau2 &
+        sleep 1
+}
+
+function scount {
+	echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'GPS Sat Count -' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'Screen:'$count > /dev/cuau2
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'Satellites: ' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'Quality: ' > /dev/cuau2
+	while true
+	do
+                gpspipe -r -n 9 > /tmp/gpsdmp
+       	        scnt=`cat /tmp/gpsdmp | grep GPGGA |cut -f 8 -d ','`
+               	qual=`cat /tmp/gpsdmp | grep GPGGA |cut -f 7 -d ','`
+		echo -en '\xfe\x45\x10' > /dev/cuau2
+		echo -en '\xfe\x49' > /dev/cuau2
+                echo -en '\xfe\x49' > /dev/cuau2
+                echo -en '\xfe\x49' > /dev/cuau2
+                echo -en '\xfe\x49' > /dev/cuau2
+		echo -en $scnt > /dev/cuau2
+		echo -en '\xfe\x45\x49' > /dev/cuau2
+		echo -en $qual > /dev/cuau2
+		sleep 2
+                if [[ `gpioctl 26` -eq 1 ]];
+                then
+                        echo -en '\xfe\x51' > /dev/cuau2
+                        echo -en '\xfe\x46' > /dev/cuau2
+                        echo -en 'Break' > /dev/cuau2
+                        sleep 2
+                        echo -en '\xfe\x45\x40' > /dev/cuau2
+                        echo -en 'Push Button!' > /dev/cuau2
+                        return 1
+                fi
+	done
+}
+
+function ntp {
+        echo -en '\xfe\x51' > /dev/cuau2
+	echo -en '\xfe\x46' > /dev/cuau2
+	echo -en 'mintc=' > /dev/cuau2
+	echo -en '\xfe\x45\x09' > /dev/cuau2
+	echo -en 'freq=' > /dev/cuau2
+	echo -en '\xfe\x45\x49' > /dev/cuau2
+	echo -en '\xfe\x4a' > /dev/cuau2
+	echo -en '|' > /dev/cuau2
+	while true
+	do
+		echo -en '\xfe\x45\x06' > /dev/cuau2
+		ntpq -c readlist | grep offset | cut -f 1 -d ',' | cut -f 2 -d '=' | tr '\n' ' ' > /dev/cuau2
+		echo -en '\xfe\x45\x09' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+                ntpq -c readlist | grep offset | cut -f 3 -d ',' | cut -f 2 -d '=' | sed -e 's/^[[:space:]]*//' |tr '\n' ' ' > /dev/cuau2
+        	echo -en '\xfe\x45\x40' > /dev/cuau2
+                ntpq -c readlist | grep offset | cut -f 2 -d ',' | cut -f 2 -d '=' | sed -e 's/^[[:space:]]*//' |tr '\n' ' ' > /dev/cuau2
+                echo -en '\xfe\x45\x49' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                ntpq -c readlist | grep offset | cut -f 4 -d ',' | cut -f 2 -d '=' | sed -e 's/^[[:space:]]*//' |tr '\n' ' ' > /dev/cuau2
+		sleep 1
+		if [[ `gpioctl 26` -eq 1 ]];
+		then
+			echo -en '\xfe\x51' > /dev/cuau2
+			echo -en '\xfe\x46' > /dev/cuau2
+			echo -en 'Break' > /dev/cuau2
+			sleep 2
+			echo -en '\xfe\x45\x40' > /dev/cuau2
+			echo -en 'Push Button!' > /dev/cuau2
+			return 1
+		fi
+	done
+}
+count=0
+echo -en '\xfe\x51' > /dev/cuau2
+echo -en '\xfe\x46' > /dev/cuau2
+echo -en 'Time/Date - Screen:'$count > /dev/cuau2
+sleep 1
+while true;
+do
+    if [[ `gpioctl 26` -eq 0 ]];
+    then
+	if [[ $count -eq 0 ]]; then
+		clk
+	fi
+    elif
+	((count=$count+1)); then
+	case $count in
+		1)
+			echo $count
+			echo "press1"
+        		echo -en '\xfe\x51' > /dev/cuau2
+        		echo -en '\xfe\x46' > /dev/cuau2
+        		echo -en 'GPS NMEA - Screen:'$count > /dev/cuau2
+        		sleep 1
+			gps
+			sleep 1
+		;;
+		2)
+                        pkill -KILL gpspipe
+			echo $count
+			echo "press2"
+		        echo -en '\xfe\x51' > /dev/cuau2
+		        echo -en '\xfe\x46' > /dev/cuau2
+		        echo -en 'GPS PPS - Screen:'$count > /dev/cuau2
+			sleep 1
+			pps
+		;;
+		3)
+			pkill -KILL gpspipe
+			echo $count
+			echo "press3"
+			scount
+		;;
+		4)
+                        pkill -KILL gpspipe
+			echo $count
+			echo "press4"
+		        echo -en '\xfe\x51' > /dev/cuau2
+        		echo -en '\xfe\x46' > /dev/cuau2
+        		echo -en 'NTP Info - Screen:'$count > /dev/cuau2
+        		sleep 1
+               		ntp
+			sleep 1
+		;;
+		5)
+			echo $count
+			echo "press5"
+			count=0
+			sleep 1
+        		echo -en '\xfe\x51' > /dev/cuau2
+        		echo -en '\xfe\x46' > /dev/cuau2
+			echo -en 'Time/Date - Screen:'$count > /dev/cuau2
+        		sleep 1
+		;;
+	esac
+    fi
+done
