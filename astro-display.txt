@@ -1,18 +1,63 @@
 #!/usr/local/bin/bash
 
 function clk {
-        echo -en '\xfe\x51' > /dev/cuau2
-        echo -en '\xfe\x46' > /dev/cuau2
-        tput cuu 2
-        echo -en `date +'%a %B %e %Y'` > /dev/cuau2
-        echo -en '\xfe\x45\x40' > /dev/cuau2
+#        echo -en '\xfe\x51' > /dev/cuau2
+#        echo -en '\xfe\x46' > /dev/cuau2
+#        tput cuu 2
+#        echo -en `date +'%a %B %e %Y'` > /dev/cuau2
+#        echo -en '\xfe\x45\x40' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en `date +'%H:%M:%S'` > /dev/cuau2
+#        sleep 1
+echo -en '\xfe\x51' > /dev/cuau2
+echo -en '\xfe\x46' > /dev/cuau2
+echo -en `date +'%a %B %e %Y'` > /dev/cuau2
+echo -en '\xfe\x45\x40' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en `date +'%H:%M:%S'` > /dev/cuau2
+i="00:00:00"
+m="00"
+s="00"
+while sleep 1
+do
+        while [ $i = `date +'%H:%M:%S'` ]
+        do
+                echo -en '\xfe\x46' > /dev/cuau2
+                echo -en `date +'%a %B %e %Y'` > /dev/cuau2
+        done
+        while [ $m = `date +'%M'` ]
+        do
+                echo -en '\xfe\x45\x45' > /dev/cuau2
+                echo -en `date +'%H'` > /dev/cuau2
+        done
+        while [ $s = `date +'%S'` ]
+        do
+                echo -en '\xfe\x45\x48' > /dev/cuau2
+                echo -en `date +'%M'` > /dev/cuau2
+        done
+        echo -en '\xfe\x45\x49' > /dev/cuau2
         echo -en '\xfe\x4a' > /dev/cuau2
         echo -en '\xfe\x4a' > /dev/cuau2
-        echo -en '\xfe\x4a' > /dev/cuau2
-        echo -en '\xfe\x4a' > /dev/cuau2
-        echo -en '\xfe\x4a' > /dev/cuau2
-        echo -en `date +'%H:%M:%S'` > /dev/cuau2
-        sleep 1
+        echo -en `date +'%S'` > /dev/cuau2
+                if [[ `gpioctl 26` -eq 1 ]];
+                then
+                        echo -en '\xfe\x51' > /dev/cuau2
+                        echo -en '\xfe\x46' > /dev/cuau2
+                        echo -en 'Break' > /dev/cuau2
+                        sleep 2
+                        echo -en '\xfe\x45\x40' > /dev/cuau2
+                        echo -en 'Push Button!' > /dev/cuau2
+                        return 1
+                fi
+done
 }
 
 function aclk {
@@ -203,7 +248,31 @@ function astro6 {
 function lights {
         echo -en '\xfe\x51' > /dev/cuau2
         echo -en '\xfe\x46' > /dev/cuau2
-	echo -en 'Lights On Time:' > /dev/cuau2
+	echo -en 'Lights On Time: ' > /dev/cuau2
+	sunset=`sunwait -p [Latt/Long Values] | tail -n 4 | head -n 1 | cut -w -f 7 | sed 's/../&:/1'`
+echo $sunset
+	sunseth=`echo $sunset | cut -d : -f 1`
+	sunsetm=`echo $sunset | cut -d : -f 2`
+echo $sunseth
+echo $sunsetm
+	sunsecsh=`echo "($sunseth*(60^2))" | bc`
+	sunsecsm=`echo "($sunsetm*(60))" | bc`
+echo $sunsecsh
+echo $sunsecsm
+	tsecs=`echo "($sunsecsh + $sunsecsm)" | bc`
+echo $tsecs
+	lsecs=`echo "(20*60)" | bc`
+echo $lsecs
+	lonts=`echo "($tsecs - $lsecs)" | bc`
+echo $lonts
+	lonth=`echo "($lonts/(60^2))" | bc -l`
+	lonh=`echo $lonth |cut -d . -f 1`
+	lontmp=`echo $lonth |cut -d . -f 2`
+echo $lontmp
+	lontm=`echo "(0.$lontmp)*60" | bc`
+	lonm=`echo "($lontm+0.5)/1" | bc`
+	echo -en '\xfe\x45\x40' > /dev/cuau2
+	echo -en "$lonh:$lonm" > /dev/cuau2
 }
 
 function ntpsvr {
