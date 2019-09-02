@@ -1,18 +1,63 @@
 #!/usr/local/bin/bash
 
 function clk {
-        echo -en '\xfe\x51' > /dev/cuau2
-        echo -en '\xfe\x46' > /dev/cuau2
-        tput cuu 2
-        echo -en `date +'%a %B %e %Y'` > /dev/cuau2
-        echo -en '\xfe\x45\x40' > /dev/cuau2
-        echo -en '\xfe\x4a' > /dev/cuau2
-        echo -en '\xfe\x4a' > /dev/cuau2
-        echo -en '\xfe\x4a' > /dev/cuau2
-        echo -en '\xfe\x4a' > /dev/cuau2
-        echo -en '\xfe\x4a' > /dev/cuau2
-        echo -en `date +'%H:%M:%S'` > /dev/cuau2
-        sleep 1
+#        echo -en '\xfe\x51' > /dev/cuau2
+#        echo -en '\xfe\x46' > /dev/cuau2
+#        tput cuu 2
+#        echo -en `date +'%a %B %e %Y'` > /dev/cuau2
+#        echo -en '\xfe\x45\x40' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en '\xfe\x4a' > /dev/cuau2
+#        echo -en `date +'%H:%M:%S'` > /dev/cuau2
+#        sleep 1
+echo -en '\xfe\x51' > /dev/cuau2
+echo -en '\xfe\x46' > /dev/cuau2
+echo -en `date +'%a %B %e %Y'` > /dev/cuau2
+echo -en '\xfe\x45\x40' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en '\xfe\x4a' > /dev/cuau2
+echo -en `date +'%H:%M:%S'` > /dev/cuau2
+i="00:00:00"
+m="00"
+s="00"
+while sleep 1
+do
+	while [ $i = `date +'%H:%M:%S'` ]
+	do
+		echo -en '\xfe\x46' > /dev/cuau2
+     		echo -en `date +'%a %B %e %Y'` > /dev/cuau2
+	done
+	while [ $m = `date +'%M'` ]
+	do
+	        echo -en '\xfe\x45\x45' > /dev/cuau2
+		echo -en `date +'%H'` > /dev/cuau2
+	done
+        while [ $s = `date +'%S'` ]
+        do
+                echo -en '\xfe\x45\x48' > /dev/cuau2
+                echo -en `date +'%M'` > /dev/cuau2
+        done
+    	echo -en '\xfe\x45\x49' > /dev/cuau2
+    	echo -en '\xfe\x4a' > /dev/cuau2
+    	echo -en '\xfe\x4a' > /dev/cuau2
+    	echo -en `date +'%S'` > /dev/cuau2
+                if [[ `gpioctl 26` -eq 1 ]];
+                then
+                        echo -en '\xfe\x51' > /dev/cuau2
+                        echo -en '\xfe\x46' > /dev/cuau2
+                        echo -en 'Break' > /dev/cuau2
+                        sleep 2
+                        echo -en '\xfe\x45\x40' > /dev/cuau2
+                        echo -en 'Push Button!' > /dev/cuau2
+                        return 1
+                fi
+done
 }
 function gps {
         echo -en '\xfe\x51' > /dev/cuau2
@@ -21,8 +66,39 @@ function gps {
 }
 function pps {
         echo -en '\xfe\x51' > /dev/cuau2
-        gpspipe -rP | egrep "^{" > /dev/cuau2 &
-        sleep 1
+	echo -en '\xfe\x46' > /dev/cuau2
+	echo -en 'TOFF:' > /dev/cuau2
+	echo -en '\xfe\x45\x40' > /dev/cuau2
+	echo -en 'PPS: ' > /dev/cuau2
+        #gpspipe -rP | egrep "^{" > /dev/cuau2 &
+	while true
+	do
+		gpspipe -rP -n 9 > /tmp/ppsdmp
+		tofdr=`cat /tmp/ppsdmp | grep TOFF |cut -f 6 -d ',' | cut -f 2 -d ':' | tr -d } `
+	        ppsdr=`cat /tmp/ppsdmp | grep PPS |cut -f 6 -d ',' | cut -f 2 -d ':'` 
+		csec=`cat /tmp/ppsdmp | grep TOFF | cut -f 5 -d ',' | cut -f 2 -d ':'`
+		ppsd=`echo "scale=9; ($ppsdr/(1000^3))" | bc -l`
+                tofd=`echo "scale=9; (1-($ppsd+($tofdr/$csec)))+$ppsd" | bc -l`
+		echo -en '\xfe\x45\x06' > /dev/cuau2
+		echo -en '              ' > /dev/cuau2
+                echo -en '\xfe\x45\x06' > /dev/cuau2
+		echo -en '0'$tofd > /dev/cuau2
+                echo -en '\xfe\x45\x46' > /dev/cuau2
+		echo -en '              ' > /dev/cuau2
+		echo -en '\xfe\x45\x46' > /dev/cuau2
+		echo -en '0'$ppsd > /dev/cuau2
+		sleep 1
+                if [[ `gpioctl 26` -eq 1 ]];
+                then
+                        echo -en '\xfe\x51' > /dev/cuau2
+                        echo -en '\xfe\x46' > /dev/cuau2
+                        echo -en 'Break' > /dev/cuau2
+                        sleep 2
+                        echo -en '\xfe\x45\x40' > /dev/cuau2
+                        echo -en 'Push Button!' > /dev/cuau2
+                        return 1
+                fi
+	done
 }
 
 function scount {
@@ -31,6 +107,7 @@ function scount {
         echo -en 'GPS Sat Count -' > /dev/cuau2
         echo -en '\xfe\x45\x40' > /dev/cuau2
         echo -en 'Screen:'$count > /dev/cuau2
+	sleep 2
         echo -en '\xfe\x51' > /dev/cuau2
         echo -en '\xfe\x46' > /dev/cuau2
         echo -en 'Satellites: ' > /dev/cuau2
@@ -60,6 +137,42 @@ function scount {
                         echo -en 'Push Button!' > /dev/cuau2
                         return 1
                 fi
+	done
+}
+
+function lalo {
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'GPS Latitude/' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'Longitude - Screen:'$count > /dev/cuau2
+	sleep 2
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'Lati: ' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'Long: ' > /dev/cuau2
+	while true
+	do
+		gpspipe -r -n 9 > /tmp/lalodmp
+		lot=`cat /tmp/lalodmp | grep GPGGA | cut -f 3,4 -d ','`
+		lat=`cat /tmp/lalodmp | grep GPGGA | cut -f 5,6 -d ','`
+		echo -en '\xfe\x45\x06' > /dev/cuau2
+		echo -en $lot > /dev/cuau2
+		echo -en '\xfe\x45\x46' > /dev/cuau2
+		echo -en $lat > /dev/cuau2
+                sleep 2
+                if [[ `gpioctl 26` -eq 1 ]];
+                then
+                        echo -en '\xfe\x51' > /dev/cuau2
+                        echo -en '\xfe\x46' > /dev/cuau2
+                        echo -en 'Break' > /dev/cuau2
+                        sleep 2
+                        echo -en '\xfe\x45\x40' > /dev/cuau2
+                        echo -en 'Push Button!' > /dev/cuau2
+                        return 1
+                fi
+
 	done
 }
 
@@ -145,8 +258,14 @@ do
 		;;
 		4)
                         pkill -KILL gpspipe
+                        echo $count
+                        echo "press4"
+                        lalo
+		;;
+		5)
+                        pkill -KILL gpspipe
 			echo $count
-			echo "press4"
+			echo "press5"
 		        echo -en '\xfe\x51' > /dev/cuau2
         		echo -en '\xfe\x46' > /dev/cuau2
         		echo -en 'NTP Info - Screen:'$count > /dev/cuau2
@@ -154,9 +273,9 @@ do
                		ntp
 			sleep 1
 		;;
-		5)
+		6)
 			echo $count
-			echo "press5"
+			echo "press6"
 			count=0
 			sleep 1
         		echo -en '\xfe\x51' > /dev/cuau2
