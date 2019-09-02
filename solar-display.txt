@@ -73,7 +73,7 @@ function pps {
         #gpspipe -rP | egrep "^{" > /dev/cuau2 &
 	while true
 	do
-		gpspipe -rP -n 9 > /tmp/ppsdmp
+		gpspipe -rP -n 12 > /tmp/ppsdmp
 		tofdr=`cat /tmp/ppsdmp | grep TOFF |cut -f 6 -d ',' | cut -f 2 -d ':' | tr -d } `
 	        ppsdr=`cat /tmp/ppsdmp | grep PPS |cut -f 6 -d ',' | cut -f 2 -d ':'` 
 		csec=`cat /tmp/ppsdmp | grep TOFF | cut -f 5 -d ',' | cut -f 2 -d ':'`
@@ -86,8 +86,19 @@ function pps {
                 echo -en '\xfe\x45\x46' > /dev/cuau2
 		echo -en '              ' > /dev/cuau2
 		echo -en '\xfe\x45\x46' > /dev/cuau2
-		echo -en '0'$ppsd > /dev/cuau2
-		sleep 1
+		if (( $(awk 'BEGIN {print ("'0$ppsd'" >= "'0.000099999'")}') ));
+                then
+                        var=`echo 0$ppsd | tr '\n' ' '`
+                        pps1=`echo "$var - 1" | bc | sed 's/^-\./-0./'` 
+			echo -en '\xfe\x45\x45' > /dev/cuau2
+                        echo -en $pps1 > /dev/cuau2
+                else
+			echo -en '\xfe\x45\x45' > /dev/cuau2
+			echo -en ' ' > /dev/cuau2
+                        echo -en '\xfe\x45\x46' > /dev/cuau2
+                        echo -en '0'$ppsd > /dev/cuau2
+                fi
+#		sleep 1
                 if [[ `gpioctl 26` -eq 1 ]];
                 then
                         echo -en '\xfe\x51' > /dev/cuau2
