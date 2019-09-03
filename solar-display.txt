@@ -154,7 +154,7 @@ function scount {
 function lalo {
         echo -en '\xfe\x51' > /dev/cuau2
         echo -en '\xfe\x46' > /dev/cuau2
-        echo -en 'GPS Latitude/' > /dev/cuau2
+        echo -en 'GPS Latitude /' > /dev/cuau2
         echo -en '\xfe\x45\x40' > /dev/cuau2
         echo -en 'Longitude - Screen:'$count > /dev/cuau2
 	sleep 2
@@ -184,6 +184,191 @@ function lalo {
                         return 1
                 fi
 
+	done
+}
+
+function gga {
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'GPS $GPGGA /' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'Screen:'$count > /dev/cuau2
+        sleep 2
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'Altitude:' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'HDOP:' > /dev/cuau2
+        echo -en '\xfe\x45\x49' > /dev/cuau2
+        echo -en 'Geoid:' > /dev/cuau2
+        while true
+        do
+		gpspipe -rP -n 12 > /tmp/ggadmp
+		alt=`cat /tmp/ggadmp | grep GGA | cut -f 10 -d ','`
+	        hdop=`cat /tmp/ggadmp | grep GGA | cut -f 9 -d ','`
+        	geoid=`cat /tmp/ggadmp | grep GGA | cut -f 12 -d ','`
+	        echo -en '\xfe\x45\x09' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en $alt > /dev/cuau2
+	        echo -en '\xfe\x45\x45' > /dev/cuau2
+		echo -en $hdop > /dev/cuau2
+                echo -en '\xfe\x45\x49' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en $geoid > /dev/cuau2
+		sleep 1
+                if [[ `gpioctl 26` -eq 1 ]];
+                then
+                        echo -en '\xfe\x51' > /dev/cuau2
+                        echo -en '\xfe\x46' > /dev/cuau2
+                        echo -en 'Break' > /dev/cuau2
+                        sleep 2
+                        echo -en '\xfe\x45\x40' > /dev/cuau2
+                        echo -en 'Push Button!' > /dev/cuau2
+                        return 1
+                fi
+	done
+}
+
+function rmc {
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'GPS $GPRMC /' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'Screen:'$count > /dev/cuau2
+        sleep 2
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'Status:' > /dev/cuau2
+        echo -en '\xfe\x45\x09' > /dev/cuau2
+	echo -en '\xfe\x4a' > /dev/cuau2
+	echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en 'faa:' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'MagVar:' > /dev/cuau2
+        while true
+        do
+		gpspipe -rP -n 12 > /tmp/rmcdmp
+	        status=`cat /tmp/rmcdmp | grep RMC | cut -f 3 -d ','`
+	        faa=`cat /tmp/rmcdmp | grep RMC | cut -f 13 -d ',' | cut -f 1 -d '*'`
+	        magvar=`cat /tmp/rmcdmp | grep RMC | cut -f 11,12 -d ','`
+		echo -en '\xfe\x45\x08' > /dev/cuau2
+		echo -en $status > /dev/cuau2
+		echo -en '\xfe\x45\x09' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en $faa > /dev/cuau2
+		echo -en '\xfe\x45\x48' > /dev/cuau2
+		echo -en $magvar > /dev/cuau2
+		sleep 1
+                if [[ `gpioctl 26` -eq 1 ]];
+                then
+                        echo -en '\xfe\x51' > /dev/cuau2
+                        echo -en '\xfe\x46' > /dev/cuau2
+                        echo -en 'Break' > /dev/cuau2
+                        sleep 2
+                        echo -en '\xfe\x45\x40' > /dev/cuau2
+                        echo -en 'Push Button!' > /dev/cuau2
+                        return 1
+                fi
+	done
+}
+
+function gsa1 {
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'GPS $GPGSA 1 /' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'Screen:'$count > /dev/cuau2
+        sleep 2
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'Mode:' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'Sats:' > /dev/cuau2
+        while true
+        do
+		gpspipe -rP -n 12 > /tmp/gsadmp
+	        mode=`cat /tmp/gsadmp | grep GSA | cut -f 2,3 -d ','`
+		sats=`cat /tmp/gsadmp | grep GSA | cut -f 4-15 -d ',' | tr ',' ' '`
+		echo -en '\xfe\x45\x06' > /dev/cuau2
+		echo -en "${mode//,}" > /dev/cuau2
+                echo -en '\xfe\x45\x46' > /dev/cuau2
+		echo -en $sats > /dev/cuau2
+		sleep 1
+                if [[ `gpioctl 26` -eq 1 ]];
+                then
+                        echo -en '\xfe\x51' > /dev/cuau2
+                        echo -en '\xfe\x46' > /dev/cuau2
+                        echo -en 'Break' > /dev/cuau2
+                        sleep 2
+                        echo -en '\xfe\x45\x40' > /dev/cuau2
+                        echo -en 'Push Button!' > /dev/cuau2
+                        return 1
+                fi
+	done
+}
+
+function gsa2 {
+        echo -en '\xfe\x51' > /dev/cuau2
+        echo -en '\xfe\x46' > /dev/cuau2
+        echo -en 'GPS $GPGSA 2 /' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'Screen:'$count > /dev/cuau2
+        sleep 2
+        echo -en '\xfe\x51' > /dev/cuau2
+	echo -en '\xfe\x45\x08' > /dev/cuau2
+	echo -en 'DOP:' > /dev/cuau2
+        echo -en '\xfe\x45\x40' > /dev/cuau2
+        echo -en 'H=' > /dev/cuau2
+        echo -en '\xfe\x45\x47' > /dev/cuau2
+        echo -en 'V=' > /dev/cuau2
+        echo -en '\xfe\x45\x49' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en '\xfe\x4a' > /dev/cuau2
+        echo -en 'P=' > /dev/cuau2
+	while true
+	do
+                gpspipe -rP -n 12 > /tmp/gsadmp
+                h=`cat /tmp/gsadmp | grep GSA | cut -f 17 -d ','`
+                v=`cat /tmp/gsadmp | grep GSA | cut -f 18 -d ',' | cut -f 1 -d '*'`
+                p=`cat /tmp/gsadmp | grep GSA | cut -f 16 -d ','`
+		echo -en '\xfe\x45\x42' > /dev/cuau2
+		echo -en $h > /dev/cuau2
+		echo -en '\xfe\x45\x49' > /dev/cuau2
+		echo -en $v > /dev/cuau2
+		echo -en '\xfe\x45\x49' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+                echo -en '\xfe\x4a' > /dev/cuau2
+	        echo -en '\xfe\x4a' > /dev/cuau2
+		echo -en $p > /dev/cuau2
+		sleep 1
+                if [[ `gpioctl 26` -eq 1 ]];
+                then
+                        echo -en '\xfe\x51' > /dev/cuau2
+                        echo -en '\xfe\x46' > /dev/cuau2
+                        echo -en 'Break' > /dev/cuau2
+                        sleep 2
+                        echo -en '\xfe\x45\x40' > /dev/cuau2
+                        echo -en 'Push Button!' > /dev/cuau2
+                        return 1
+                fi
 	done
 }
 
@@ -273,10 +458,34 @@ do
                         echo "press4"
                         lalo
 		;;
-		5)
+                5)
+                        pkill -KILL gpspipe
+                        echo $count
+                        echo "press5"
+                        gga
+                ;;
+                6)
+                        pkill -KILL gpspipe
+                        echo $count
+                        echo "press6"
+                        rmc
+                ;;
+                7)
+                        pkill -KILL gpspipe
+                        echo $count
+                        echo "press7"
+                        gsa1
+                ;;
+                8)
+                        pkill -KILL gpspipe
+                        echo $count
+                        echo "press8"
+                        gsa2
+                ;;
+		9)
                         pkill -KILL gpspipe
 			echo $count
-			echo "press5"
+			echo "press9"
 		        echo -en '\xfe\x51' > /dev/cuau2
         		echo -en '\xfe\x46' > /dev/cuau2
         		echo -en 'NTP Info - Screen:'$count > /dev/cuau2
@@ -284,9 +493,9 @@ do
                		ntp
 			sleep 1
 		;;
-		6)
+		10)
 			echo $count
-			echo "press6"
+			echo "press10"
 			count=0
 			sleep 1
         		echo -en '\xfe\x51' > /dev/cuau2
