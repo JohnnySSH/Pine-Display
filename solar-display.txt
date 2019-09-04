@@ -74,15 +74,19 @@ function pps {
 	while true
 	do
 		gpspipe -rP -n 12 > /tmp/ppsdmp
-		tofdr=`cat /tmp/ppsdmp | grep TOFF |cut -f 6 -d ',' | cut -f 2 -d ':' | tr -d } `
+		tofdr=`cat /tmp/ppsdmp | grep TOFF |cut -f 6 -d ',' | cut -f 2 -d ':' | tr -d } | bc -l`
 	        ppsdr=`cat /tmp/ppsdmp | grep PPS |cut -f 6 -d ',' | cut -f 2 -d ':'` 
 		csec=`cat /tmp/ppsdmp | grep TOFF | cut -f 5 -d ',' | cut -f 2 -d ':'`
 		ppsd=`echo "scale=9; ($ppsdr/(1000^3))" | bc -l`
-                tofd=`echo "scale=9; (1-($ppsd+($tofdr/$csec)))+$ppsd" | bc -l`
+                #tofd=`echo "scale=9; (1-($ppsd+($tofdr/$csec)))+$ppsd" | bc -l`
+		#cdate=`date +%s`
+		#rgdate=`cat /tmp/ppsdmp | grep TOFF | cut -f 3 -d ',' | cut -f 2 -d ':'`
+		#tofd=`echo "scale=9; ($cdate - $tofdr)" | bc -l`
+		#tofd=`echo "scale=9; ($cdate - $rgdate)" | bc -l`
 		echo -en '\xfe\x45\x06' > /dev/cuau2
 		echo -en '              ' > /dev/cuau2
                 echo -en '\xfe\x45\x06' > /dev/cuau2
-		echo -en '0'$tofd > /dev/cuau2
+		echo -en '0.'$tofdr > /dev/cuau2
                 echo -en '\xfe\x45\x46' > /dev/cuau2
 		echo -en '              ' > /dev/cuau2
 		echo -en '\xfe\x45\x46' > /dev/cuau2
@@ -255,7 +259,7 @@ function rmc {
 		gpspipe -rP -n 12 > /tmp/rmcdmp
 	        status=`cat /tmp/rmcdmp | grep RMC | cut -f 3 -d ','`
 	        faa=`cat /tmp/rmcdmp | grep RMC | cut -f 13 -d ',' | cut -f 1 -d '*'`
-	        magvar=`cat /tmp/rmcdmp | grep RMC | cut -f 11,12 -d ','`
+	        magvar=`cat /tmp/rmcdmp | grep RMC | cut -f 11,12 -d ',' | tr ',' ' ' | tr -d '[:space:]'`
 		echo -en '\xfe\x45\x08' > /dev/cuau2
 		echo -en $status > /dev/cuau2
 		echo -en '\xfe\x45\x09' > /dev/cuau2
@@ -438,6 +442,7 @@ do
 		;;
 		2)
                         pkill -KILL gpspipe
+			rm /tmp/gpsdmp
 			echo $count
 			echo "press2"
 		        echo -en '\xfe\x51' > /dev/cuau2
