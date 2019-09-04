@@ -442,7 +442,6 @@ do
 		;;
 		2)
                         pkill -KILL gpspipe
-			rm /tmp/gpsdmp
 			echo $count
 			echo "press2"
 		        echo -en '\xfe\x51' > /dev/cuau2
